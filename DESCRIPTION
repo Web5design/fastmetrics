@@ -1,0 +1,9 @@
+Package: fastmetrics
+Type: Package
+Title: Performance metrics ported from scikit-learn
+Description: Performance metrics ported from scikit-learn
+Version: 0.14.1
+Date: 2013-08-16
+Author: Sean Whalen <sean@node99.org>
+Maintainer: Sean Whalen <sean@node99.org>
+License: GPL
