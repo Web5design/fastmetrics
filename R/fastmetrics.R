@@ -41,8 +41,8 @@ binary_clf_curve <- function(y_true, y_score, pos_label = NULL) {
     y_score             <- y_score[desc_score_indices]
     y_true              <- y_true[desc_score_indices]
 
-    # y_score typically has many tied values. Here we extract
-    # the indices associated with the distinct values. We also
+    # y_score typically has many tied values. here we extract
+    # the indices associated with the distinct values. we also
     # concatenate a value for the end of the curve.
     distinct_value_indices  <- which(diff(y_score) != 0)
     threshold_idxs          <- c(distinct_value_indices, length(y_true))
@@ -80,25 +80,36 @@ precision_recall_curve <- function(y_true, y_score, pos_label = NULL) {
     precision   <- tps / (tps + fps)
     recall      <- tps / tail(tps, 1)
 
+    # TODO: this code leads to incorrect aupr, commented out for now, unit test will fail in the meantime
     # stop when full recall attained
     # and reverse the outputs so recall is decreasing
-    last_ind    <- which(tps == tail(tps, 1))[1]
-    sl          <- last_ind:1
+    # last_ind    <- which(tps == tail(tps, 1))[1]
+    # sl          <- last_ind:1
 
-    precision   <- c(precision[sl], 1)
-    recall      <- c(recall[sl], 0)
-    thresholds  <- thresholds[sl]
+    # precision   <- c(precision[sl], 1)
+    # recall      <- c(recall[sl], 0)
+    # thresholds  <- thresholds[sl]
     list(precision, recall, thresholds)
 }
 
 average_precision_score <- function(y_true, y_score, pos_label = NULL) {
     points <- precision_recall_curve(y_true, y_score, pos_label)
-    trapz(points[[2]], points[[1]])
+    trapz(points[[2]], points[[1]], reorder = F)
 }
 
 roc_auc_score <- function(y_true, y_score, pos_label = NULL) {
     points <- roc_curve(y_true, y_score, pos_label)
     trapz(points[[1]], points[[2]], reorder = T)
+}
+
+fmax_score <- function(y_true, y_score, beta = 1.0, pos_label = NULL) {
+    # Radivojac, P. et al. (2013). A Large-Scale Evaluation of Computational Protein Function Prediction. Nature Methods, 10(3), 221–227.
+    # Manning, C. D. et al. (2008). Evaluation in Information Retrieval. In Introduction to Information Retrieval. Cambridge University Press.
+    points      <- precision_recall_curve(y_true, y_score, pos_label)
+    precision   <- points[[1]]
+    recall      <- points[[2]]
+    f1          <- (1 + beta**2) * (precision * recall) / ((beta**2 * precision) + recall)
+    max(f1[complete.cases(f1)])
 }
 
 test_trapz <- function() {
